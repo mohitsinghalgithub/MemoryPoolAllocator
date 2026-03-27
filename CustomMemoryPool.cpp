@@ -41,12 +41,12 @@ void FixedPool::deallocate(void *ptr)
 	ptr = nullptr;
 }
 
-
 VariableMemoryPool::VariableMemoryPool()
 {
 	for(const auto &size : sizes)
 	{
-		pool.emplace_back(new FixedPool(size, 1024));
+		
+		pool.emplace_back(make_unique<FixedPool>(size, 1024));
 	}
 }
 

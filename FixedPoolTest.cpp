@@ -1,21 +1,6 @@
-#include <iostream>
-#include <vector>
-#include <thread>
-#include <cassert>
-#include <chrono>
-#include <set>
-#include "FixedPool.h"
+#include "test.h"
 
 
-#define EXTPECT_TRUE(x) assert((x))
-#define EXTPECT_EQ(x, y) assert((x == y))
-
-class FixedPoolTest
-{
-public:
-	void basicTest();
-	void ThreadTest();
-};
 
 void FixedPoolTest::basicTest()
 {
@@ -43,7 +28,7 @@ void FixedPoolTest::basicTest()
 	EXTPECT_EQ(*ptr1, 'c');
 	
 
-	//pool.deallocate(ptr1);
+	pool.deallocate(ptr1);
 
 	set<int*> pointerSet;
 	for(int i = 0; i < 3; i++)
@@ -80,13 +65,4 @@ void FixedPoolTest::ThreadTest()
 	thread th2(worker, &pool);
 	th1.join();
 	th2.join();
-}
-
-int main()
-{
-	FixedPoolTest testPoolObj;
-
-	testPoolObj.basicTest();
-	testPoolObj.ThreadTest();
-	return 0;
 }

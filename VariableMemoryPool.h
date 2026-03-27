@@ -10,17 +10,9 @@ private:
 	static constexpr int NUM_CLASSES = 6;
 	size_t sizes[NUM_CLASSES] = {8, 16, 32, 64, 128, 256};
 
-	vector<FixedPool *> pool;	
+	vector<unique_ptr<FixedPool>> pool;	
 public:
 	VariableMemoryPool();
-
-	~VariableMemoryPool()
-	{
-		for(auto & poolData : pool)
-		{
-			delete poolData;
-		}
-	}
 
 	int getIndex(const size_t size);
 
