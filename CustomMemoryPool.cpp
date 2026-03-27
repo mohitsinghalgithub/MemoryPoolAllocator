@@ -1,5 +1,5 @@
 #include "FixedPool.h"
-
+#include "VariableMemoryPool.h"
 
 FixedPool::FixedPool(size_t size, size_t count)
 {
@@ -19,7 +19,9 @@ void * FixedPool::allocate()
 {
 	unique_lock<mutex> lock(mxt);
 	
-	cond.wait(lock, [this](){return freeList != nullptr;});
+	bool condition_met = cond.wait_for(lock, std::chrono::seconds(1),[this](){return freeList != nullptr;});
+	if(!condition_met)
+		throw bad_alloc();
 	Block *data = freeList;
 	freeList = freeList->next;
 	lock.unlock();
@@ -39,50 +41,35 @@ void FixedPool::deallocate(void *ptr)
 	ptr = nullptr;
 }
 
-class VariableMemoryPool
+
+VariableMemoryPool::VariableMemoryPool()
 {
-private:
-	static constexpr int NUM_CLASSES = 6;
-	size_t sizes[NUM_CLASSES] = {8, 16, 32, 64, 128, 256};
-
-	vector<FixedPool *> pool;	
-public:
-	VariableMemoryPool()
+	for(const auto &size : sizes)
 	{
-		for(const auto &size : sizes)
-		{
-			pool.emplace_back(new FixedPool(size, 1024));
-		}
+		pool.emplace_back(new FixedPool(size, 1024));
 	}
+}
 
-	~VariableMemoryPool()
+int VariableMemoryPool::getIndex(const size_t size)
+{
+	for(int i = 0; i < NUM_CLASSES; i++)
 	{
-		for(auto & poolData : pool)
-		{
-			delete poolData;
-		}
+		if(size <= sizes[i])
+			return i;
 	}
+	throw std::bad_alloc();
+}
 
-	int getIndex(const size_t size)
-	{
-		for(int i = 0; i < NUM_CLASSES; i++)
-		{
-			if(size <= sizes[i])
-				return i;
-		}
-		throw std::bad_alloc();
-	}
+void *VariableMemoryPool::allocate(size_t size)
+{
+	return pool[getIndex(size)]->allocate();
+}
 
-	void *allocate(size_t size)
-	{
-		return pool[getIndex(size)]->allocate();
-	}
+void VariableMemoryPool::deallocate(void * ptr, size_t size)
+{
+	pool[getIndex(size)]->deallocate(ptr);
+}
 
-	void deallocate(void * ptr, size_t size)
-	{
-		pool[getIndex(size)]->deallocate(ptr);
-	}
-};
 
 template <typename T>
 class PoolAllocator

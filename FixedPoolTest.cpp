@@ -43,7 +43,7 @@ void FixedPoolTest::basicTest()
 	EXTPECT_EQ(*ptr1, 'c');
 	
 
-	pool.deallocate(ptr1);
+	//pool.deallocate(ptr1);
 
 	set<int*> pointerSet;
 	for(int i = 0; i < 3; i++)
